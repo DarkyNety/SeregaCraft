@@ -1,0 +1,473 @@
+/* ==========================================
+   SerёgaCraft 3D — Основные стили
+   ========================================== */
+
+/* ----- Глобальные переменные и сброс ----- */
+:root {
+    --bg: #1a1a1a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+canvas {
+    display: block;
+}
+
+#cursor-item {
+    position: fixed;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    display: none;        /* изначально скрыт */
+}
+
+/* ----- Стартовый оверлей (клик для игры) ----- */
+#overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10;
+    cursor: pointer;
+    transition: opacity 0.4s;
+}
+
+#overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.clock {
+  position: fixed;
+  top: 10px;
+  right: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-family: monospace;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+#clock-icon {
+  font-size: 20px;
+  transition: all 0.3s;
+}
+
+#overlay .box {
+    background: #1e1e1e;
+    border: 2px solid #444;
+    border-radius: 20px;
+    padding: 36px 48px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+#overlay h1 {
+    font-size: 2.8em;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #4caf50, #2196f3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#overlay p {
+    font-size: 1em;
+    color: #bbb;
+    margin: 6px 0;
+}
+
+#overlay .hint {
+    font-size: 0.8em;
+    color: #777;
+    margin-top: 14px;
+}
+
+/* ----- Перекрестие прицела ----- */
+#crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    pointer-events: none;
+}
+
+#crosshair::before,
+#crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+#crosshair::before {
+    width: 2px;
+    height: 20px;
+}
+
+#crosshair::after {
+    width: 20px;
+    height: 2px;
+}
+
+/* ----- Хотбар (быстрые слоты) ----- */
+#inventory-hotbar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 8;
+    display: flex;
+    gap: 3px;
+    pointer-events: none;
+}
+
+/* ----- Слоты инвентаря (общие стили) ----- */
+.slot {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 2px solid #555;
+    border-radius: 6px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.1s;
+}
+
+.slot.selected {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
+}
+
+.slot img {
+    width: 38px;
+    height: 38px;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.slot .count {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* ----- Отладочная информация (XYZ) ----- */
+#info {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 12px;
+    z-index: 6;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px #000;
+    opacity: 0.85;
+}
+
+/* ----- Панель управления полётом (ноклип) ----- */
+#noclip-panel {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid #4caf50;
+    border-radius: 10px;
+    padding: 12px 20px;
+    color: #fff;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+#noclip-panel label {
+    color: #ccc;
+}
+
+#noclip-panel input {
+    width: 80px;
+    padding: 6px;
+    background: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+}
+
+#noclip-panel button {
+    background: #4caf50;
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* ----- GUI инвентаря и верстака ----- */
+#inventory-gui {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: none;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+#inventory-gui .panel {
+    background: #1e1e1e;
+    border: 2px solid #555;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    color: #fff;
+    position: relative;
+}
+
+.crafting-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.grid-2x2 {
+    display: grid;
+    grid-template-columns: 50px 50px;
+    gap: 3px;
+}
+
+.grid-3x3 {
+    display: grid;
+    grid-template-columns: 50px 50px 50px;
+    gap: 3px;
+}
+
+.result-slot {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #aaa;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hotbar-row {
+    display: flex;
+    gap: 3px;
+    margin-top: 10px;
+}
+
+.storage-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 50px);
+    gap: 3px;
+    margin-bottom: 10px;
+}
+
+/* ----- Курсор мыши с перетаскиваемым предметом ----- */
+.cursor-item {
+    position: fixed;
+    pointer-events: none;
+    z-index: 40;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px dashed #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+}
+
+.cursor-item img {
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+}
+
+/* ----- Кнопка закрытия GUI инвентаря ----- */
+#close-gui-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: #c0392b;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ----- Панель сохранения / загрузки ----- */
+#save-panel {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 25;
+    display: flex;
+    gap: 5px;
+}
+
+#save-panel button {
+    padding: 5px 12px;
+    background: #4caf50;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#save-panel button:last-child {
+    background: #f39c12;
+}
+
+#load-file-input {
+    display: none;
+}
+
+#overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 100;
+}
+
+.menu-panel {
+    background: #3b2e1e;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 20px #000;
+    min-width: 300px;
+}
+
+.menu-panel h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px #000;
+}
+
+.menu-panel button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 1.1em;
+    background: #5a4a3a;
+    border: 2px solid #8b7355;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.menu-panel button:hover {
+    background: #7a5e4a;
+}
+
+#world-list {
+    list-style: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#world-list li {
+    padding: 8px;
+    margin: 2px 0;
+    background: #4a3b2b;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#world-list li:hover {
+    background: #6b5a4a;
+}
+
+#pause-menu {
+    display: none; /* скрыто по умолчанию */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+}
+
+#pause-menu .menu-panel {
+    background: #3b2e1e;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 20px #000;
+    min-width: 260px;
+}
+
+#pause-menu button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 1em;
+    background: #5a4a3a;
+    border: 2px solid #8b7355;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#pause-menu button:hover {
+    background: #7a5e4a;
+}

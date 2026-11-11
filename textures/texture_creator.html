@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Редактор текстуры верстака Minecraft 16×16</title>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --surface: #2a2a2a;
+            --text: #e0d6c2;
+            --accent: #8b6b3e;
+            --border: #444;
+            --active: #b8944e;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+        .container {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 28px 24px 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #d4b896;
+            text-align: center;
+            margin-bottom: -8px;
+        }
+        .view-selector {
+            display: flex;
+            gap: 8px;
+            background: #1e1e1e;
+            border-radius: 30px;
+            padding: 5px;
+            border: 1px solid #3a3a3a;
+            justify-content: center;
+        }
+        .view-btn {
+            padding: 10px 22px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: transparent;
+            color: #a09080;
+            transition: all 0.25s;
+        }
+        .view-btn:hover {
+            color: #d4b896;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .view-btn.active {
+            background: #5c4020;
+            color: #f0d9a0;
+            box-shadow: 0 2px 12px rgba(139, 107, 62, 0.4);
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            background: #1e1e1e;
+            border-radius: 20px;
+            padding: 10px 12px;
+            border: 1px solid #3a3a3a;
+            justify-content: center;
+        }
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: #2a2a2a;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            color: #b0a58e;
+            position: relative;
+        }
+        .tool-btn:hover {
+            background: #3a3a3a;
+            color: #e0d6c2;
+        }
+        .tool-btn.active {
+            background: #5c4020;
+            border-color: #b8944e;
+            color: #f0d9a0;
+            box-shadow: 0 0 12px rgba(184, 148, 78, 0.5);
+        }
+        .tool-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: #2a2a2a;
+            padding: 4px;
+            border: 1px solid #3a3a3a;
+        }
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        .color-picker::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+        .tool-separator {
+            width: 1px;
+            height: 30px;
+            background: #3a3a3a;
+            margin: 0 2px;
+        }
+        .textures-row {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .texture-card {
+            background: #1e1e1e;
+            border-radius: 20px;
+            padding: 16px 16px 12px;
+            border: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .texture-card.active-edit {
+            border-color: var(--active);
+            box-shadow: 0 0 24px rgba(184, 148, 78, 0.35), 0 0 0 1px var(--active);
+        }
+        .texture-label {
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #b0a58e;
+            background: #252525;
+            padding: 6px 20px;
+            border-radius: 20px;
+            border: 1px solid #3a3a3a;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .texture-label .load-btn {
+            background: none;
+            border: none;
+            color: #b0a58e;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .texture-label .load-btn:hover {
+            background: #3a3a3a;
+            color: #f0d9a0;
+        }
+        canvas {
+            border-radius: 8px;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            box-shadow: 0 0 0 2px #2a2a2a, 0 4px 16px rgba(0, 0, 0, 0.4);
+            cursor: crosshair;
+            background: #111;
+        }
+        canvas.paste-mode {
+            cursor: copy;
+            box-shadow: 0 0 0 3px #f0d9a0, 0 0 20px rgba(240, 217, 160, 0.4);
+        }
+        .pixel-info {
+            font-size: 0.8rem;
+            color: #8a7a65;
+            min-height: 24px;
+            letter-spacing: 0.03em;
+            transition: color 0.2s;
+        }
+        .save-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 20px;
+            padding: 8px 18px;
+            color: #b0a58e;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            letter-spacing: 0.03em;
+        }
+        .save-btn:hover {
+            background: #3a3a3a;
+            color: #f0d9a0;
+            border-color: #6b5030;
+        }
+        .paste-indicator {
+            font-size: 0.8rem;
+            color: #f0d9a0;
+            background: #5c4020;
+            padding: 4px 14px;
+            border-radius: 14px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .paste-indicator.visible {
+            display: inline-flex;
+        }
+        @media (max-width: 750px) {
+            .textures-row { gap: 16px; }
+            .toolbar { gap: 3px; padding: 6px; }
+            .tool-btn { width: 34px; height: 34px; font-size: 1rem; }
+            canvas { width: 260px; height: 260px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🪓 Верстак Minecraft ⛏</h1>
+
+    <div class="view-selector" id="viewSelector">
+        <button class="view-btn active" data-view="both">Обе стороны</button>
+        <button class="view-btn" data-view="top">Только верх</button>
+        <button class="view-btn" data-view="side">Только бок</button>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+        <input type="color" id="colorPicker" class="color-picker" value="#c8a96e" title="Текущий цвет">
+
+        <button class="tool-btn active" data-tool="pen" title="Карандаш (рисовать)">✏️</button>
+        <button class="tool-btn" data-tool="fill" title="Заливка (ведро)">🪣</button>
+        <button class="tool-btn" data-tool="eraser" title="Ластик (прозрачность)">🧽</button>
+        <button class="tool-btn" data-tool="select" title="Выделение области">⬜</button>
+        <button class="tool-btn" data-tool="eyedropper" title="Пипетка (взять цвет)">💉</button>
+
+        <span class="tool-separator"></span>
+
+        <button class="tool-btn" id="rotateCW" title="Повернуть по часовой">↻</button>
+        <button class="tool-btn" id="rotateCCW" title="Повернуть против часовой">↺</button>
+
+        <span class="tool-separator"></span>
+
+        <button class="tool-btn" id="undoBtn" title="Назад (Ctrl+Z)">↩️</button>
+        <button class="tool-btn" id="redoBtn" title="Вперёд (Ctrl+Y)">↪️</button>
+
+        <span class="tool-separator"></span>
+
+        <button class="tool-btn" id="fillSolid" title="Залить выделение сплошным">⬛</button>
+        <button class="tool-btn" id="fillGrid" title="Залить выделение решёткой">🔲</button>
+        <button class="tool-btn" id="smoothBtn" title="Сгладить выделение">✨</button>
+
+        <span class="tool-separator"></span>
+
+        <button class="tool-btn" id="copyBtn" title="Копировать выделенное (Ctrl+C)">📋</button>
+        <button class="tool-btn" id="pasteBtn" title="Вставить скопированное">📌</button>
+
+        <span class="paste-indicator" id="pasteIndicator">📌 Режим вставки (Esc – отмена)</span>
+    </div>
+
+    <div class="textures-row" id="texturesRow">
+        <div class="texture-card active-edit" id="cardTop">
+            <span class="texture-label">
+                🪓 Верхняя часть
+                <button class="load-btn" id="loadTopBtn" title="Загрузить изображение">📂</button>
+            </span>
+            <canvas id="canvasTop" width="320" height="320"></canvas>
+            <span class="pixel-info" id="pixelInfoTop">наведите курсор</span>
+            <button class="save-btn" id="saveTop">💾 Сохранить PNG</button>
+        </div>
+        <div class="texture-card" id="cardSide">
+            <span class="texture-label">
+                ⛏ Боковая часть
+                <button class="load-btn" id="loadSideBtn" title="Загрузить изображение">📂</button>
+            </span>
+            <canvas id="canvasSide" width="320" height="320"></canvas>
+            <span class="pixel-info" id="pixelInfoSide">наведите курсор</span>
+            <button class="save-btn" id="saveSide">💾 Сохранить PNG</button>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="fileInputTop" accept="image/*" style="display:none">
+<input type="file" id="fileInputSide" accept="image/*" style="display:none">
+
+<script>
+    (function() {
+        const SCALE = 20;
+        const TEX_SIZE = 16;
+        const CANVAS_SIZE = TEX_SIZE * SCALE;
+        const TRANSPARENT = 'transparent'; // специальное значение прозрачного пикселя
+
+        const PALETTE = {
+            woodLight: '#c8a96e',
+            woodMid: '#bc9862',
+            woodDark: '#9a7a4a',
+            woodDarker: '#7a5c34',
+            woodVeryDark: '#5c4020',
+            woodShadow: '#4a3218',
+            woodHighlight: '#d4b896',
+            woodPlankLight: '#c49a54',
+            woodPlankMid: '#b08840',
+            woodPlankDark: '#8a642a',
+            woodPlankLine: '#3d2b14',
+            ironLight: '#9a9a9a',
+            ironMid: '#7a7a7a',
+            ironDark: '#5a5a5a',
+            ironVeryDark: '#3a3a3a',
+            ironEdge: '#b0b0b0',
+            handleLight: '#8b6b3e',
+            handleDark: '#5c3d1c',
+            sawTooth: '#d4d4d4',
+            sawBlade: '#8a8a8a'
+        };
+
+        function createTopTexture() {
+            const t = PALETTE;
+            const data = Array(TEX_SIZE).fill().map(() => Array(TEX_SIZE).fill(t.woodPlankLight));
+            for (let i = 0; i < TEX_SIZE; i++) {
+                data[0][i] = t.woodVeryDark;
+                data[TEX_SIZE - 1][i] = t.woodVeryDark;
+                data[i][0] = t.woodVeryDark;
+                data[i][TEX_SIZE - 1] = t.woodVeryDark;
+            }
+            const cx = 7, cy = 7;
+            for (let x = 1; x < TEX_SIZE - 1; x++) data[cy][x] = t.woodVeryDark;
+            for (let y = 1; y < TEX_SIZE - 1; y++) data[y][cx] = t.woodVeryDark;
+            for (let x = 2; x < TEX_SIZE - 2; x++)
+                if (data[cy - 1][x] === t.woodPlankLight) data[cy - 1][x] = t.woodMid;
+            for (let x = 2; x < TEX_SIZE - 2; x++)
+                if (data[cy + 1][x] === t.woodPlankLight) data[cy + 1][x] = t.woodDark;
+            for (let y = 2; y < TEX_SIZE - 2; y++)
+                if (data[y][cx - 1] === t.woodPlankLight) data[y][cx - 1] = t.woodMid;
+            for (let y = 2; y < TEX_SIZE - 2; y++)
+                if (data[y][cx + 1] === t.woodPlankLight) data[y][cx + 1] = t.woodDark;
+            data[cy][cx] = t.woodShadow;
+            data[cy - 1][cx] = t.woodShadow;
+            data[cy + 1][cx] = t.woodShadow;
+            data[cy][cx - 1] = t.woodShadow;
+            data[cy][cx + 1] = t.woodShadow;
+            const specks = [[2,2],[4,12],[10,3],[13,5],[3,10],[11,13],[14,2],[5,5],[9,9],[12,6]];
+            specks.forEach(([y, x]) => {
+                if (y>0 && y<TEX_SIZE-1 && x>0 && x<TEX_SIZE-1) data[y][x] = (y+x)%3===0 ? t.woodHighlight : t.woodMid;
+            });
+            data[1][1] = t.woodLight;
+            data[1][TEX_SIZE-2] = t.woodLight;
+            data[TEX_SIZE-2][1] = t.woodLight;
+            data[TEX_SIZE-2][TEX_SIZE-2] = t.woodLight;
+            return data;
+        }
+
+        function createSideTexture() {
+            const t = PALETTE;
+            const data = Array(TEX_SIZE).fill().map(() => Array(TEX_SIZE).fill(t.woodPlankLight));
+            for (let y = 0; y < TEX_SIZE; y++) {
+                for (let x = 0; x < TEX_SIZE; x++) {
+                    const sec = Math.floor(x/4);
+                    data[y][x] = (sec===0 || sec===2) ? t.woodPlankLight : t.woodPlankMid;
+                }
+            }
+            for (let y = 0; y < TEX_SIZE; y++) { data[y][3]=t.woodPlankLine; data[y][7]=t.woodPlankLine; data[y][11]=t.woodPlankLine; }
+            for (let y = 0; y < TEX_SIZE; y++) {
+                for (let x = 0; x < TEX_SIZE; x++) {
+                    if (x===3||x===7||x===11) continue;
+                    if (y%4===0 && data[y][x]===t.woodPlankLight) data[y][x]=t.woodLight;
+                    else if (y%4===2 && data[y][x]===t.woodPlankMid) data[y][x]=t.woodPlankDark;
+                }
+            }
+            for (let y=2; y<=6; y++) for (let x=12; x<=14; x++) data[y][x]=t.ironMid;
+            data[2][15]=t.ironEdge; data[3][15]=t.ironMid; data[4][15]=t.ironEdge; data[5][15]=t.ironMid; data[6][15]=t.ironEdge;
+            for (let y=2; y<=6; y++) data[y][12]=t.ironDark;
+            data[4][10]=t.handleLight; data[4][11]=t.handleLight; data[5][10]=t.handleLight; data[5][11]=t.handleLight;
+            data[4][9]=t.handleDark; data[5][9]=t.handleDark;
+            data[4][12]=t.ironVeryDark; data[5][12]=t.ironVeryDark;
+            for (let y=8; y<=13; y++) { data[y][12]=t.handleLight; data[y][13]=t.handleLight; }
+            for (let x=11; x<=15; x++) { data[8][x]=t.ironEdge; data[9][x]=t.ironMid; data[10][x]=t.ironDark; }
+            data[9][12]=t.ironLight; data[9][13]=t.ironLight;
+            data[8][11]=t.ironVeryDark; data[8][15]=t.ironVeryDark; data[8][12]=t.ironVeryDark; data[8][13]=t.ironVeryDark;
+            data[13][12]=t.handleDark; data[13][13]=t.handleDark;
+            return data;
+        }
+
+        let topTexture = createTopTexture();
+        let sideTexture = createSideTexture();
+        let activeSide = 'top';
+        let currentColor = '#c8a96e';
+        let currentTool = 'pen';
+        let selection = null;
+        let isSelecting = false;
+        let selectStart = null;
+        let selectEnd = null;
+
+        let clipboard = null;
+        let pasteMode = false;
+
+        const historyTop = [];
+        const historySide = [];
+        let historyIdxTop = -1;
+        let historyIdxSide = -1;
+
+        function deepCopyTex(tex) {
+            return tex.map(row => [...row]);
+        }
+
+        function pushHistory(side) {
+            const tex = side === 'top' ? topTexture : sideTexture;
+            const historyArr = side === 'top' ? historyTop : historySide;
+            let idxRef = side === 'top' ? historyIdxTop : historyIdxSide;
+            const copy = deepCopyTex(tex);
+            if (idxRef < historyArr.length - 1) historyArr.splice(idxRef + 1);
+            historyArr.push(copy);
+            if (historyArr.length > 50) historyArr.shift();
+            if (side === 'top') historyIdxTop = historyArr.length - 1;
+            else historyIdxSide = historyArr.length - 1;
+            updateUndoRedoButtons();
+        }
+
+        function performUndo(side) {
+            const historyArr = side === 'top' ? historyTop : historySide;
+            let idxRef = side === 'top' ? historyIdxTop : historyIdxSide;
+            if (idxRef <= 0) return;
+            idxRef--;
+            if (side === 'top') {
+                historyIdxTop = idxRef;
+                topTexture = deepCopyTex(historyArr[idxRef]);
+            } else {
+                historyIdxSide = idxRef;
+                sideTexture = deepCopyTex(historyArr[idxRef]);
+            }
+            selection = null;
+            redrawAll();
+            updateUndoRedoButtons();
+        }
+
+        function performRedo(side) {
+            const historyArr = side === 'top' ? historyTop : historySide;
+            let idxRef = side === 'top' ? historyIdxTop : historyIdxSide;
+            if (idxRef >= historyArr.length - 1) return;
+            idxRef++;
+            if (side === 'top') {
+                historyIdxTop = idxRef;
+                topTexture = deepCopyTex(historyArr[idxRef]);
+            } else {
+                historyIdxSide = idxRef;
+                sideTexture = deepCopyTex(historyArr[idxRef]);
+            }
+            selection = null;
+            redrawAll();
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            const idx = activeSide === 'top' ? historyIdxTop : historyIdxSide;
+            const arr = activeSide === 'top' ? historyTop : historySide;
+            undoBtn.disabled = idx <= 0;
+            redoBtn.disabled = idx >= arr.length - 1;
+        }
+
+        const canvasTop = document.getElementById('canvasTop');
+        const canvasSide = document.getElementById('canvasSide');
+        const cardTop = document.getElementById('cardTop');
+        const cardSide = document.getElementById('cardSide');
+        const pixelInfoTop = document.getElementById('pixelInfoTop');
+        const pixelInfoSide = document.getElementById('pixelInfoSide');
+        const colorPicker = document.getElementById('colorPicker');
+        const viewSelector = document.getElementById('viewSelector');
+        const pasteIndicator = document.getElementById('pasteIndicator');
+        const copyBtn = document.getElementById('copyBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const smoothBtn = document.getElementById('smoothBtn');
+
+        function getActiveTextureData() {
+            return activeSide === 'top' ? topTexture : sideTexture;
+        }
+
+        function getActiveCanvas() {
+            return activeSide === 'top' ? canvasTop : canvasSide;
+        }
+
+        function mouseToTexel(canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            const cssScaleX = rect.width / canvas.width;
+            const cssScaleY = rect.height / canvas.height;
+            const canvasX = (e.clientX - rect.left) / cssScaleX;
+            const canvasY = (e.clientY - rect.top) / cssScaleY;
+            const tx = Math.floor(canvasX / SCALE);
+            const ty = Math.floor(canvasY / SCALE);
+            if (tx >= 0 && tx < TEX_SIZE && ty >= 0 && ty < TEX_SIZE) return { x: tx, y: ty };
+            return null;
+        }
+
+        function drawCheckerboard(ctx) {
+            for (let y = 0; y < TEX_SIZE; y++) {
+                for (let x = 0; x < TEX_SIZE; x++) {
+                    ctx.fillStyle = (x + y) % 2 === 0 ? '#cccccc' : '#ffffff';
+                    ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+                }
+            }
+        }
+
+        function drawTexture(canvas, textureData, selectionRect = null) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = CANVAS_SIZE;
+            canvas.height = CANVAS_SIZE;
+            ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            drawCheckerboard(ctx);
+            for (let y = 0; y < TEX_SIZE; y++) {
+                for (let x = 0; x < TEX_SIZE; x++) {
+                    const col = textureData[y][x];
+                    if (col !== TRANSPARENT) {
+                        ctx.fillStyle = col;
+                        ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+                    }
+                }
+            }
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 0.8;
+            for (let i = 0; i <= TEX_SIZE; i++) {
+                const pos = i * SCALE;
+                ctx.beginPath();
+                ctx.moveTo(pos, 0);
+                ctx.lineTo(pos, CANVAS_SIZE);
+                ctx.stroke();
+                ctx.moveTo(0, pos);
+                ctx.lineTo(CANVAS_SIZE, pos);
+                ctx.stroke();
+            }
+            if (selectionRect && selectionRect.w > 0 && selectionRect.h > 0) {
+                ctx.save();
+                ctx.strokeStyle = '#f0d9a0';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([6, 4]);
+                ctx.strokeRect(
+                    selectionRect.x * SCALE,
+                    selectionRect.y * SCALE,
+                    selectionRect.w * SCALE,
+                    selectionRect.h * SCALE
+                );
+                ctx.restore();
+            }
+        }
+
+        function redrawActive() {
+            drawTexture(getActiveCanvas(), getActiveTextureData(), selection);
+        }
+
+        function redrawAll() {
+            drawTexture(canvasTop, topTexture, (activeSide === 'top' ? selection : null));
+            drawTexture(canvasSide, sideTexture, (activeSide === 'side' ? selection : null));
+        }
+
+        function floodFill(texData, startX, startY, fillColor) {
+            const targetColor = texData[startY][startX];
+            if (targetColor === fillColor) return;
+            const queue = [[startX, startY]];
+            const visited = Array(TEX_SIZE).fill().map(() => Array(TEX_SIZE).fill(false));
+            visited[startY][startX] = true;
+            const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+            while (queue.length) {
+                const [x, y] = queue.shift();
+                texData[y][x] = fillColor;
+                for (const [dx, dy] of dirs) {
+                    const nx = x + dx, ny = y + dy;
+                    if (nx >= 0 && nx < TEX_SIZE && ny >= 0 && ny < TEX_SIZE && !visited[ny][nx] && texData[ny][nx] === targetColor) {
+                        visited[ny][nx] = true;
+                        queue.push([nx, ny]);
+                    }
+                }
+            }
+        }
+
+        function rotateCW(arr) {
+            const n = TEX_SIZE;
+            const rotated = Array(n).fill().map(() => Array(n));
+            for (let y = 0; y < n; y++)
+                for (let x = 0; x < n; x++)
+                    rotated[x][n - 1 - y] = arr[y][x];
+            return rotated;
+        }
+
+        function rotateCCW(arr) {
+            const n = TEX_SIZE;
+            const rotated = Array(n).fill().map(() => Array(n));
+            for (let y = 0; y < n; y++)
+                for (let x = 0; x < n; x++)
+                    rotated[n - 1 - x][y] = arr[y][x];
+            return rotated;
+        }
+
+        function fillSelectionSolid() {
+            if (!selection || selection.w <= 0 || selection.h <= 0) return;
+            const data = getActiveTextureData();
+            const { x, y, w, h } = selection;
+            for (let dy = 0; dy < h; dy++)
+                for (let dx = 0; dx < w; dx++)
+                    data[y + dy][x + dx] = currentColor;
+            pushHistory(activeSide);
+            redrawActive();
+        }
+
+        function fillSelectionGrid() {
+            if (!selection || selection.w <= 0 || selection.h <= 0) return;
+            const data = getActiveTextureData();
+            const { x, y, w, h } = selection;
+            for (let dy = 0; dy < h; dy++)
+                for (let dx = 0; dx < w; dx++)
+                    if ((dx + dy) % 2 === 0) data[y + dy][x + dx] = currentColor;
+            pushHistory(activeSide);
+            redrawActive();
+        }
+
+        function smoothSelection() {
+            if (!selection || selection.w <= 0 || selection.h <= 0) return;
+            const data = getActiveTextureData();
+            const { x: sx, y: sy, w, h } = selection;
+            const copy = deepCopyTex(data);
+            for (let dy = 0; dy < h; dy++) {
+                for (let dx = 0; dx < w; dx++) {
+                    const px = sx + dx;
+                    const py = sy + dy;
+                    let r = 0, g = 0, b = 0, count = 0;
+                    for (let ny = py - 1; ny <= py + 1; ny++) {
+                        for (let nx = px - 1; nx <= px + 1; nx++) {
+                            if (nx >= 0 && nx < TEX_SIZE && ny >= 0 && ny < TEX_SIZE) {
+                                const hex = copy[ny][nx];
+                                if (hex !== TRANSPARENT) {
+                                    const rgb = hexToRgb(hex);
+                                    r += rgb.r; g += rgb.g; b += rgb.b;
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+                    if (count > 0) {
+                        data[py][px] = rgbToHex(Math.round(r/count), Math.round(g/count), Math.round(b/count));
+                    } // иначе оставляем как есть (прозрачный или что было)
+                }
+            }
+            pushHistory(activeSide);
+            redrawActive();
+        }
+
+        function hexToRgb(hex) {
+            const c = hex.substring(1);
+            const bigint = parseInt(c, 16);
+            return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function copySelection() {
+            if (!selection || selection.w <= 0 || selection.h <= 0) return;
+            const data = getActiveTextureData();
+            const { x, y, w, h } = selection;
+            const copied = Array(h).fill().map(() => Array(w));
+            for (let dy = 0; dy < h; dy++)
+                for (let dx = 0; dx < w; dx++)
+                    copied[dy][dx] = data[y + dy][x + dx];
+            clipboard = { data: copied, w, h };
+            pasteBtn.disabled = false;
+            copyBtn.style.background = '#4a3a1a';
+            setTimeout(() => { copyBtn.style.background = ''; }, 200);
+        }
+
+        function enterPasteMode() {
+            if (!clipboard) return;
+            pasteMode = true;
+            currentTool = null;
+            document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+            pasteBtn.classList.add('active');
+            pasteIndicator.classList.add('visible');
+            canvasTop.classList.add('paste-mode');
+            canvasSide.classList.add('paste-mode');
+            selection = null;
+            redrawAll();
+        }
+
+        function exitPasteMode() {
+            pasteMode = false;
+            pasteBtn.classList.remove('active');
+            pasteIndicator.classList.remove('visible');
+            canvasTop.classList.remove('paste-mode');
+            canvasSide.classList.remove('paste-mode');
+            currentTool = 'pen';
+            document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+            const penBtn = document.querySelector('.tool-btn[data-tool="pen"]');
+            if (penBtn) penBtn.classList.add('active');
+            redrawAll();
+        }
+
+        function pasteAt(texel) {
+            if (!clipboard || !texel) return;
+            const data = getActiveTextureData();
+            const { data: cb, w, h } = clipboard;
+            for (let dy = 0; dy < h; dy++) {
+                for (let dx = 0; dx < w; dx++) {
+                    const tx = texel.x + dx;
+                    const ty = texel.y + dy;
+                    if (tx >= 0 && tx < TEX_SIZE && ty >= 0 && ty < TEX_SIZE) {
+                        data[ty][tx] = cb[dy][dx];
+                    }
+                }
+            }
+            pushHistory(activeSide);
+            redrawActive();
+            exitPasteMode();
+        }
+
+        function saveTextureAsPNG(textureData, filename) {
+            const canvas = document.createElement('canvas');
+            canvas.width = TEX_SIZE;
+            canvas.height = TEX_SIZE;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(TEX_SIZE, TEX_SIZE);
+            for (let y = 0; y < TEX_SIZE; y++) {
+                for (let x = 0; x < TEX_SIZE; x++) {
+                    const idx = (y * TEX_SIZE + x) * 4;
+                    const col = textureData[y][x];
+                    if (col === TRANSPARENT) {
+                        imageData.data[idx] = 0;
+                        imageData.data[idx+1] = 0;
+                        imageData.data[idx+2] = 0;
+                        imageData.data[idx+3] = 0;
+                    } else {
+                        const { r, g, b } = hexToRgb(col);
+                        imageData.data[idx] = r;
+                        imageData.data[idx+1] = g;
+                        imageData.data[idx+2] = b;
+                        imageData.data[idx+3] = 255;
+                    }
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+
+        function loadImageToTexture(file, side) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const smallCanvas = document.createElement('canvas');
+                    smallCanvas.width = TEX_SIZE;
+                    smallCanvas.height = TEX_SIZE;
+                    const ctx = smallCanvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, TEX_SIZE, TEX_SIZE);
+                    const imageData = ctx.getImageData(0, 0, TEX_SIZE, TEX_SIZE);
+                    const newTex = Array(TEX_SIZE).fill().map(() => Array(TEX_SIZE));
+                    for (let y = 0; y < TEX_SIZE; y++) {
+                        for (let x = 0; x < TEX_SIZE; x++) {
+                            const i = (y * TEX_SIZE + x) * 4;
+                            const r = imageData.data[i];
+                            const g = imageData.data[i+1];
+                            const b = imageData.data[i+2];
+                            const a = imageData.data[i+3];
+                            newTex[y][x] = (a < 128) ? TRANSPARENT : rgbToHex(r, g, b);
+                        }
+                    }
+                    if (side === 'top') topTexture = newTex;
+                    else sideTexture = newTex;
+                    selection = null;
+                    pushHistory(side);
+                    redrawAll();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setActiveSide(side) {
+            activeSide = side;
+            cardTop.classList.toggle('active-edit', side === 'top');
+            cardSide.classList.toggle('active-edit', side === 'side');
+            selection = null;
+            isSelecting = false;
+            if (pasteMode) {
+                canvasTop.classList.toggle('paste-mode', true);
+                canvasSide.classList.toggle('paste-mode', true);
+            }
+            updateUndoRedoButtons();
+            redrawAll();
+        }
+
+        viewSelector.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            viewSelector.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const view = btn.dataset.view;
+            if (view === 'both') {
+                cardTop.style.display = '';
+                cardSide.style.display = '';
+            } else if (view === 'top') {
+                cardTop.style.display = '';
+                cardSide.style.display = 'none';
+                if (activeSide === 'side') setActiveSide('top');
+            } else if (view === 'side') {
+                cardTop.style.display = 'none';
+                cardSide.style.display = '';
+                if (activeSide === 'top') setActiveSide('side');
+            }
+        });
+
+        cardTop.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('canvas')) return;
+            setActiveSide('top');
+        });
+        cardSide.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('canvas')) return;
+            setActiveSide('side');
+        });
+
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (pasteMode) exitPasteMode();
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+                if (currentTool !== 'select') {
+                    isSelecting = false;
+                    selection = null;
+                    redrawActive();
+                }
+            });
+        });
+
+        document.getElementById('rotateCW').addEventListener('click', () => {
+            if (activeSide === 'top') topTexture = rotateCW(topTexture);
+            else sideTexture = rotateCW(sideTexture);
+            selection = null;
+            pushHistory(activeSide);
+            redrawAll();
+        });
+        document.getElementById('rotateCCW').addEventListener('click', () => {
+            if (activeSide === 'top') topTexture = rotateCCW(topTexture);
+            else sideTexture = rotateCCW(sideTexture);
+            selection = null;
+            pushHistory(activeSide);
+            redrawAll();
+        });
+
+        document.getElementById('fillSolid').addEventListener('click', fillSelectionSolid);
+        document.getElementById('fillGrid').addEventListener('click', fillSelectionGrid);
+        document.getElementById('smoothBtn').addEventListener('click', smoothSelection);
+        document.getElementById('copyBtn').addEventListener('click', copySelection);
+        document.getElementById('pasteBtn').addEventListener('click', () => {
+            if (pasteMode) exitPasteMode();
+            else enterPasteMode();
+        });
+
+        document.getElementById('undoBtn').addEventListener('click', () => performUndo(activeSide));
+        document.getElementById('redoBtn').addEventListener('click', () => performRedo(activeSide));
+
+        colorPicker.addEventListener('input', (e) => { currentColor = e.target.value; });
+
+        document.getElementById('saveTop').addEventListener('click', () => saveTextureAsPNG(topTexture, 'crafting_table_top.png'));
+        document.getElementById('saveSide').addEventListener('click', () => saveTextureAsPNG(sideTexture, 'crafting_table_side.png'));
+
+        document.getElementById('loadTopBtn').addEventListener('click', () => document.getElementById('fileInputTop').click());
+        document.getElementById('loadSideBtn').addEventListener('click', () => document.getElementById('fileInputSide').click());
+        document.getElementById('fileInputTop').addEventListener('change', (e) => {
+            if (e.target.files[0]) loadImageToTexture(e.target.files[0], 'top');
+            e.target.value = '';
+        });
+        document.getElementById('fileInputSide').addEventListener('change', (e) => {
+            if (e.target.files[0]) loadImageToTexture(e.target.files[0], 'side');
+            e.target.value = '';
+        });
+
+        function bindCanvasEvents(canvas, side) {
+            let mouseDown = false;
+            let lastDrawn = null;
+
+            canvas.addEventListener('mousedown', (e) => {
+                if (activeSide !== side) return;
+                if (pasteMode) {
+                    const texel = mouseToTexel(canvas, e);
+                    if (texel) pasteAt(texel);
+                    return;
+                }
+                const texel = mouseToTexel(canvas, e);
+                if (!texel) return;
+                mouseDown = true;
+                const data = getActiveTextureData();
+
+                if (currentTool === 'pen' || currentTool === 'eraser') {
+                    const val = currentTool === 'eraser' ? TRANSPARENT : currentColor;
+                    data[texel.y][texel.x] = val;
+                    lastDrawn = texel;
+                    pushHistory(side);
+                    redrawActive();
+                } else if (currentTool === 'fill') {
+                    floodFill(data, texel.x, texel.y, currentColor);
+                    pushHistory(side);
+                    redrawActive();
+                } else if (currentTool === 'eyedropper') {
+                    const color = data[texel.y][texel.x];
+                    if (color !== TRANSPARENT) {
+                        currentColor = color;
+                        colorPicker.value = color;
+                    }
+                } else if (currentTool === 'select') {
+                    isSelecting = true;
+                    selectStart = texel;
+                    selectEnd = texel;
+                    selection = { x: texel.x, y: texel.y, w: 1, h: 1 };
+                    redrawActive();
+                }
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                const texel = mouseToTexel(canvas, e);
+                const infoEl = side === 'top' ? pixelInfoTop : pixelInfoSide;
+                if (texel) {
+                    const data = side === 'top' ? topTexture : sideTexture;
+                    const color = data[texel.y][texel.x];
+                    if (pasteMode) {
+                        infoEl.textContent = 'щёлкните для вставки';
+                        infoEl.style.color = '#f0d9a0';
+                    } else {
+                        if (color === TRANSPARENT) {
+                            infoEl.textContent = `пиксель [${texel.x}, ${texel.y}] · прозрачный`;
+                            infoEl.style.color = '#888888';
+                        } else {
+                            infoEl.textContent = `пиксель [${texel.x}, ${texel.y}] · ${color}`;
+                            infoEl.style.color = color;
+                        }
+                    }
+                } else {
+                    infoEl.textContent = pasteMode ? 'щёлкните для вставки' : 'наведите курсор';
+                    infoEl.style.color = pasteMode ? '#f0d9a0' : '#8a7a65';
+                }
+
+                if (!mouseDown || pasteMode) return;
+                if (activeSide !== side) return;
+
+                if ((currentTool === 'pen' || currentTool === 'eraser') && texel) {
+                    const data = getActiveTextureData();
+                    if (!lastDrawn || lastDrawn.x !== texel.x || lastDrawn.y !== texel.y) {
+                        const val = currentTool === 'eraser' ? TRANSPARENT : currentColor;
+                        data[texel.y][texel.x] = val;
+                        lastDrawn = texel;
+                        pushHistory(side);
+                        redrawActive();
+                    }
+                } else if (currentTool === 'select' && isSelecting && texel) {
+                    selectEnd = texel;
+                    const x1 = Math.min(selectStart.x, selectEnd.x);
+                    const y1 = Math.min(selectStart.y, selectEnd.y);
+                    const x2 = Math.max(selectStart.x, selectEnd.x);
+                    const y2 = Math.max(selectStart.y, selectEnd.y);
+                    selection = { x: x1, y: y1, w: x2 - x1 + 1, h: y2 - y1 + 1 };
+                    redrawActive();
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                if (currentTool === 'select' && isSelecting) {
+                    isSelecting = false;
+                    if (selection && (selection.w <= 1 && selection.h <= 1)) selection = null;
+                    redrawActive();
+                }
+                mouseDown = false;
+                lastDrawn = null;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                mouseDown = false;
+                lastDrawn = null;
+                if (currentTool === 'select' && isSelecting) isSelecting = false;
+                const infoEl = side === 'top' ? pixelInfoTop : pixelInfoSide;
+                infoEl.textContent = pasteMode ? 'щёлкните для вставки' : 'наведите курсор';
+                infoEl.style.color = pasteMode ? '#f0d9a0' : '#8a7a65';
+            });
+
+            canvas.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (pasteMode) exitPasteMode();
+            });
+        }
+
+        bindCanvasEvents(canvasTop, 'top');
+        bindCanvasEvents(canvasSide, 'side');
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                performUndo(activeSide);
+            } else if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+                e.preventDefault();
+                performRedo(activeSide);
+            } else if (e.ctrlKey && e.key === 'c') {
+                if (!pasteMode && selection) {
+                    e.preventDefault();
+                    copySelection();
+                }
+            } else if (e.key === 'Escape') {
+                if (pasteMode) {
+                    e.preventDefault();
+                    exitPasteMode();
+                }
+            }
+        });
+
+        pushHistory('top');
+        pushHistory('side');
+        redrawAll();
+        setActiveSide('top');
+        pasteBtn.disabled = true;
+        updateUndoRedoButtons();
+    })();
+</script>
+</body>
+</html>

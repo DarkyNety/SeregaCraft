@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SerёgaCraft 3D</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Importmap для Three.js -->
+    <script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.167.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.167.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+    <!-- Оверлей для стартового меню и выбора мира -->
+    <div id="overlay">
+        <div id="main-menu" class="menu-panel">
+            <h1>⛏ SerёgaCraft 3D</h1>
+            <button id="btn-singleplayer">Одиночная игра</button>
+            <button id="btn-multiplayer">Мультиплеер (бета)</button>
+            <button id="btn-settings">Настройки</button>
+            <button id="btn-donate">Донат (обязательно)</button>
+            <button id="btn-skin">Настройки скина</button>
+            <p class="version">v1.0</p>
+        </div>
+
+        <!-- Подменю: выбор/создание мира -->
+        <div id="world-select" class="menu-panel" style="display:none;">
+            <h2>Выберите мир</h2>
+            <ul id="world-list"></ul>
+            <button id="btn-new-world">Новый мир</button>
+            <button id="btn-load-world">Загрузить мир из файла</button>
+            <button id="btn-back-to-menu">← Назад</button>
+        </div>
+
+        <!-- Подменю: настройки -->
+        <div id="settings-panel" class="menu-panel" style="display:none;">
+            <h2>Настройки</h2>
+            <label>Громкость: <input type="range" min="0" max="100" value="50"></label>
+            <button id="btn-settings-back">← Назад</button>
+        </div>
+    </div>
+
+    <!-- Панель паузы (теперь вне #overlay и всегда доступна) -->
+    <div id="pause-menu" class="menu-panel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:300;">
+    <h2>Пауза</h2>
+    <button id="resume-btn" style="display:block; width:100%; margin:10px 0;">Продолжить</button>
+    <div style="margin:12px 0; width:100%;">
+        <label for="pause-fly-speed" style="display:block; margin-bottom:5px; color:#ccc; text-align:left;">Скорость полёта:</label>
+        <input type="number" id="pause-fly-speed" value="15" step="1" min="1" max="200" style="display:block; width:100%; padding:8px; text-align:center;">
+    </div>
+    <button id="save-quit-btn" style="display:block; width:100%; margin:10px 0;">💾 Сохранить и выйти в меню</button>
+</div>
+
+    <!-- Перекрестие -->
+    <div id="crosshair"></div>
+
+    <!-- Хотбар (панель быстрого доступа) -->
+    <div id="inventory-hotbar"></div>
+
+    <!-- Отладочная информация -->
+    <div id="info"></div>
+
+    <!-- Панель сохранения/загрузки -->
+    <div id="save-panel">
+        <button id="save-btn">💾 Сохранить</button>
+        <button id="load-btn">📂 Загрузить</button>
+        <input type="file" id="load-file-input" accept=".json">
+        <button id="skin-btn">🎨 Скин</button>
+        <input type="file" id="skin-file-input" accept="image/png" style="display:none;">
+    </div>
+
+    <!-- Панель управления полётом (ноклип) -->
+    <div id="noclip-panel">
+        <label>Скорость полёта:</label>
+        <input type="number" id="flySpeedInput" value="15" step="1" min="1" max="200">
+        <button id="applyFlyBtn">Летать</button>
+    </div>
+
+    <div id="game-clock" class="clock">
+        <span id="clock-time">00:00</span>
+        <span id="clock-icon">🌙</span>
+    </div>
+
+    <!-- GUI инвентаря и верстака -->
+    <div id="inventory-gui">
+        <div class="panel">
+            <div id="close-gui-btn">✕</div>
+            <div class="crafting-area">
+                <div id="crafting-grid" class="grid-2x2"></div>
+                <span style="font-size:12px;">Крафт</span>
+            </div>
+            <div class="crafting-area">
+                <div class="result-slot" id="result-slot"></div>
+                <span style="font-size:12px;">Результат</span>
+            </div>
+            <div>
+                <div class="storage-grid" id="storage-grid"></div>
+                <div class="hotbar-row" id="gui-hotbar"></div>
+                <span style="font-size:12px;">Инвентарь</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Курсор мыши с предметом (для перетаскивания) -->
+    <div class="cursor-item" id="cursor-item" style="display:none;"></div>
+
+    <!-- Основной скрипт игры (модуль) -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
